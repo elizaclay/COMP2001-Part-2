@@ -1,0 +1,8 @@
+CREATE TABLE CW2.TrailUser(
+    UserID INT NOT NULL IDENTITY,
+    emailAddress VARCHAR (320) NOT NULL,
+    roleType VARCHAR (5) NOT NULL
+
+    CONSTRAINT PK_User PRIMARY KEY (UserID),
+    CONSTRAINT UQ_email UNIQUE (emailAddress)
+)
