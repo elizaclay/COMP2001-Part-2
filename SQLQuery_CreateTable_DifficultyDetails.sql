@@ -1,4 +1,4 @@
-CREATE TABLE CW2.Difficulty (
+CREATE TABLE CW2.DifficultyDetails (
     DifficultyID INT IDENTITY NOT NULL,
     DifficultyName VARCHAR(10) NOT NULL, 
 
