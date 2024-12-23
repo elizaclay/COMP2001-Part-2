@@ -1,6 +1,4 @@
-INSERT INTO CW2.LocationDetails (City, StateProvince, Country)
+INSERT INTO CW2.RouteDetails (RouteName) 
 
 VALUES 
-('Plymouth', 'Devon', 'UK'),
-('Exeter', 'Devon', 'UK'),
-('Bath', 'Somerset', 'UK')
+('Loop'), ('Out-and-back'), ('Point-to-point')
