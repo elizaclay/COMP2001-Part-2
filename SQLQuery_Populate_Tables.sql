@@ -1,4 +1,4 @@
-INSERT INTO CW2.RouteDetails (RouteName) 
+INSERT INTO CW2.Feature (FeatureName) 
 
-VALUES 
-('Loop'), ('Out-and-back'), ('Point-to-point')
+VALUES
+('Cycling'), ('Birding'), ('Dog-friendly')
