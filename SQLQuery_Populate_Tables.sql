@@ -1,4 +1,6 @@
-INSERT INTO CW2.Feature (FeatureName) 
-
+INSERT INTO CW2.TrailUser (EmailAddress, RoleType)
 VALUES
-('Cycling'), ('Birding'), ('Dog-friendly')
+('grace@plymouth.ac.uk','Admin'), 
+('tim@plymouth.ac.uk', 'User'), 
+('ada@plymouth.ac.uk', 'User')
+
