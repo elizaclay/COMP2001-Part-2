@@ -1,0 +1,7 @@
+CREATE TABLE CW2.RouteDetails(
+    RouteID INT IDENTITY NOT NULL,
+    RouteName VARCHAR(20) NOT NULL, 
+
+    CONSTRAINT PK_RouteDetails PRIMARY KEY (RouteID),
+    CONSTRAINT UQ_RouteName UNIQUE (RouteName)
+)
