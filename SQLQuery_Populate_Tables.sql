@@ -1,0 +1,1 @@
+INSERT INTO CW2.DifficultyDetails (DifficultyName) VALUES ('Easy'), ('Medium'), ('Hard');
