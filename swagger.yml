@@ -8,6 +8,29 @@ servers:
   - url: "/api"
 
 paths:
+  /login:
+    post:
+      summary: Login/Authenticate via API 
+      description: Authenticates a user 
+      operationId: auth.login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "tim@plymouth.ac.uk"
+                password:
+                  type: string
+                  example: "COMP2001!"
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Unauthorised
   /trails:
     get:
       summary: Get all trails
