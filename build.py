@@ -1,7 +1,6 @@
-#build.py
-
 import pyodbc
 from config import db, ma, conn, cursor
+
 
 ### TRAIL USER TABLE #################################################
 columns = [
@@ -32,7 +31,6 @@ create_table_cmd = f"CREATE TABLE CW2.Trail ({','.join(columns)})"
 cursor.execute(create_table_cmd)
 cursor.commit()
 
-
 #### PATHPOINT TABLE ################################################
 columns = [
     'PathPointID INT IDENTITY(1,1) PRIMARY KEY',
@@ -45,7 +43,6 @@ create_table_cmd = f"CREATE TABLE CW2.PathPoint ({','.join(columns)})"
 cursor.execute(create_table_cmd)
 cursor.commit()
 
-
 ### FEATURE TABLE ####################################################
 columns = [
     'FeatureID INT IDENTITY(1,1) PRIMARY KEY',
@@ -56,11 +53,10 @@ create_table_cmd = f"CREATE TABLE CW2.Feature ({','.join(columns)})"
 cursor.execute(create_table_cmd)
 cursor.commit()
 
-
 ### TRAILPOINT LINK TABLE ##############################################
 columns = [
-    'TrailID INT NOT NULL FOREIGN KEY REFERENCES CW2.Trail(TrailID)',
-    'PathPointID INT NOT NULL FOREIGN KEY REFERENCES CW2.PathPoint(PathPointID)',
+    'TrailID INT NOT NULL FOREIGN KEY REFERENCES CW2.Trail(TrailID) ON DELETE CASCADE',
+    'PathPointID INT NOT NULL FOREIGN KEY REFERENCES CW2.PathPoint(PathPointID) ON DELETE CASCADE',
     'Timestamp DATETIME DEFAULT GETDATE()',
     'PRIMARY KEY (TrailID, PathPointID)'
 ]
@@ -70,8 +66,8 @@ cursor.commit()
 
 ### TRAILFEATURE LINK TABLE #############################################
 columns = [
-    'TrailID INT NOT NULL FOREIGN KEY REFERENCES CW2.Trail(TrailID)',
-    'FeatureID INT NOT NULL FOREIGN KEY REFERENCES CW2.Feature(FeatureID)',
+    'TrailID INT NOT NULL FOREIGN KEY REFERENCES CW2.Trail(TrailID) ON DELETE CASCADE',
+    'FeatureID INT NOT NULL FOREIGN KEY REFERENCES CW2.Feature(FeatureID) ON DELETE CASCADE',
     'Timestamp DATETIME DEFAULT GETDATE()',
     'PRIMARY KEY (TrailID, FeatureID)'
 ]
@@ -80,6 +76,5 @@ cursor.execute(create_table_cmd)
 cursor.commit()
 
 
-#close cursor 
 cursor.close()
 print("Build script finished")

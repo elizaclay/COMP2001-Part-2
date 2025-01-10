@@ -7,10 +7,24 @@ info:
 servers:
   - url: "/api"
 
+
+tags:  
+  - name: Authentication
+  - name: Trail CRUD Operations
+    description: Endpoints for managing trails
+  - name: Path Points CRUD Operations
+    description: Endpoints for managing path points
+  - name: Feature CRUD Operations
+    description: Endpoints for managing features
+  - name: Assign PathPoints and Features
+    description: Endpoints for assigning path points and features to trails
+
 paths:
   /login:
     post:
-      summary: Login/Authenticate via API 
+      tags:
+        - Authentication
+      summary: Authenticate User via Authenticator API 
       description: Authenticates a user 
       operationId: auth.login
       requestBody:
@@ -33,35 +47,45 @@ paths:
           description: Unauthorised
   /trails:
     get:
+      tags:
+        - Trail CRUD Operations
       summary: Get all trails
-      description: Retrieves all existing trails
-      operationId: routes.get_all_trails
+      description: Gets all existing trails with their features and pathpoints
+      operationId: routes.admin_get_all_trails
+      security:
+        - BearerAuth: []
       responses:
         "200":
-          description: A list of trails
+          description: Trails successfully retrieved
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Trail'
+                $ref: '#/components/schemas/Trail'
     post:
+      tags:
+        - Trail CRUD Operations
       summary: Create a new trail
       description: Creates a new trail
-      operationId: routes.create_trail
+      security:
+        - BearerAuth: []
+      operationId: routes.admin_create_trail
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Trail'   
+              $ref: '#/components/schemas/CreateTrail'
       responses:
         "201":
           description: Trail created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Trail'
+                $ref: '#/components/schemas/CreateTrail'
+  
+
+
+
   /trails/{trail_id}:
     parameters:
       - name: trail_id
@@ -71,41 +95,505 @@ paths:
         schema:
           type: integer
     get:
-      summary: Get a specific trail
-      description: Retrieves a trail by ID
+      tags:
+        - Trail CRUD Operations
+      summary: Get a trail by ID
+      description: Retrieves a specific trail, including related path points and features
       operationId: routes.get_trail_by_id
+      security:
+        - BearerAuth: []
       responses:
         "200":
-          description: Retrieved trail details 
+          description: A trail with its related path points and features
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trail'
+        "404":
+          description: Trail not found
+    delete:
+      tags:
+        - Trail CRUD Operations
+      summary: Delete an existing trail
+      description: Deletes a trail by ID 
+      operationId: routes.delete_trail
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Trail deleted successfully
+        "404":
+          description: Trail not found
     put:
-      summary: Update an existing trail
-      description: Updates a trail based on the provided TrailID
+      tags:
+        - Trail CRUD Operations
+      summary: Update a trail by ID
+      description: Updates the details of an existing trail using provided fields
       operationId: routes.update_trail
+      security:
+        - BearerAuth: []
+      description: The ID of the trail to update
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Trail'  
+              $ref: '#/components/schemas/CreateTrail'
       responses:
         "200":
           description: Trail updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Trail'
-    delete:
-      summary: Delete an existing trail
-      description: Deletes a trail based on the provided TrailID
-      operationId: routes.delete_trail
+                $ref: '#/components/schemas/CreateTrail'
+        "404":
+          description: Trail not found
+        "401":
+          description: Unauthorised user
+        
+  /pathpoints:
+    get:
+      tags:
+        - Path Points CRUD Operations
+      summary: Get all path points
+      description: Retrieves all existing path points for trails.
+      operationId: routes.get_all_points
+      security:
+        - BearerAuth: []
       responses:
         "200":
-          description: Trail deleted successfully
+          description: A list of all path points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PathPoint' 
+        "401":
+          description: Unauthorised user 
+    post:
+      tags:
+        - Path Points CRUD Operations
+      summary: Create a new path point
+      description: Creates a new path point with latitude, longitude, and details
+      operationId: routes.create_point
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Latitude:
+                  type: number
+                  format: float
+                  description: Latitude of the path point
+                  example: 50.3755
+                Longitude:
+                  type: number
+                  format: float
+                  description: Longitude of the path point
+                  example: -4.1427
+                Details:
+                  type: string
+                  description: Optional field to describe the path point
+                  example: "Start of the trail"
+      responses:
+        "201":
+          description: Path point created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PathPoint'
+        "400":
+          description: Bad Request Latitude and Longitude are required fields.
+        "500":
+          description: Internal Server Error
+
+  /pathpoints/{point_id}:
+    get:
+      tags:
+        - Path Points CRUD Operations
+      summary: Get a path point by ID
+      description: Retrieves a specific path point by its ID.
+      operationId: routes.get_point_by_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          description: The ID of the path point to retrieve
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: A specific path point retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PathPoint'
+        "404":
+          description: Path point not found
+        "500":
+          description: Internal server error
+    delete:
+      tags:
+        - Path Points CRUD Operations
+      summary: Delete a path point by ID
+      description: Deletes a specific path point by its ID.
+      operationId: routes.delete_point
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          description: The ID of the path point to delete
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "204":
+          description: Path point successfully deleted
+    put:
+      tags:
+        - Path Points CRUD Operations
+      summary: Update an existing path point
+      description: Updates the details of an existing path point by ID 
+      operationId: routes.update_path_point
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          description: The ID of the path point to update
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Latitude:
+                  type: number
+                  format: float
+                  description: Latitude of the path point
+                  example: 50.3755
+                Longitude:
+                  type: number
+                  format: float
+                  description: Longitude of the path point
+                  example: -4.1427
+                Details:
+                  type: string
+                  description: Optional field to describe the path point
+                  example: "Updated description of the path point"
+      responses:
+        "200":
+          description: Path point updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PathPoint'
+  /features:
+    post:
+      tags:
+        - Feature CRUD Operations
+      summary: Create a new feature
+      description: Adds a new feature to the database
+      operationId: routes.create_feature
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                FeatureName:
+                  type: string
+                  description: "The name of the feature"
+                  example: "Dog-Friendly"
+      responses:
+        "201":
+          description: Feature created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+        "400":
+          description: FeatureName is required
+        "409":
+          description: Feature already exists
+
+  
+    get:
+      tags:
+        - Feature CRUD Operations
+      summary: Get all features
+      description: Retrieves a list of all features in the database
+      operationId: routes.get_all_features
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: A list of all features
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feature'
+      responses:
+        "201":
+          description: Feature created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+        "400":
+          description: FeatureName is required
+        "409":
+          description: Feature already exists
+
+  /features/{feature_id}:
+    parameters:
+      - name: feature_id
+        in: path
+        required: true
+        description: The ID of the feature to retrieve or delete
+        schema:
+          type: integer
+          example: 1
+    get:
+      tags:
+        - Feature CRUD Operations
+      summary: Get a feature by ID
+      description: Retrieves a specific feature by its ID
+      operationId: routes.get_feature_by_id
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: A feature with the given ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+        "404":
+          description: Feature not found
+
+    delete:
+      tags:
+        - Feature CRUD Operations
+      summary: Delete a feature by ID
+      description: Deletes a feature with the given ID from the database
+      operationId: routes.delete_feature
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Feature deleted successfully
+        "404":
+          description: Feature not found
+    put:
+      tags:
+        - Feature CRUD Operations
+      summary: Update an existing feature
+      description: Updates the details of an existing feature by ID 
+      operationId: routes.update_feature
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: feature_id
+          in: path
+          required: true
+          description: The ID of the feature to update
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                FeatureName:
+                  type: string
+                  description: "Name of the feature"
+                  example: "Dog-Friendly"
+      responses:
+        "200":
+          description: Feature updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+        "400":
+          description: Bad request required fields are missing or invalid
+        "404":
+          description: Feature not found
+
+  
+  /trail/{trail_id}/feature/{feature_name}:
+    post:
+      summary: Assign a feature to a trail
+      operationId: routes.assign_feature_to_trail
+      description: Assigns a specified feature to a specified trail by its ID and the feature by its name
+      security:
+        - BearerAuth: []
+      tags:
+        - Assign PathPoints and Features
+      parameters:
+        - name: trail_id
+          in: path
+          required: true
+          description: ID of the trail to which the feature will be assigned.
+          schema:
+            type: integer
+        - name: feature_name
+          in: path
+          required: true
+          description: Name of the feature to be assigned to the trail.
+          schema:
+            type: string
+      responses:
+        201:
+          description: Feature successfully assigned to trail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Feature 'Waterfall' successfully assigned to trail with ID '1'"
+        400:
+          description: Feature is already assigned to the trail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Feature is already assigned to the trail"
+        404:
+          description: Trail or feature not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Trail not found"
+
+  /trail/{trail_id}/pathpoint/{path_point_id}:
+    post:
+      summary: Assign a path point to a trail
+      operationId: routes.assign_path_point_to_trail
+      security:
+        - BearerAuth: []
+      description: Assigns a specified path point to a specified trail by their IDs.
+      tags:
+        - Assign PathPoints and Features
+      parameters:
+        - name: trail_id
+          in: path
+          required: true
+          description: ID of the trail to which the path point will be assigned.
+          schema:
+            type: integer
+        - name: path_point_id
+          in: path
+          required: true
+          description: ID of the path point to be assigned to the trail.
+          schema:
+            type: integer
+      responses:
+        201:
+          description: Path point successfully assigned to trail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Path point with ID '5' successfully assigned to trail with ID '1'"
+        400:
+          description: Path point is already assigned to the trail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Path point is already assigned to the trail"
+        404:
+          description: Trail or path point not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Trail not found"
+  /trails/userview:
+    get:
+      tags:
+        - User Access
+      summary: Get all trails
+      description: Gets all existing trails without IDs and timestamps 
+      operationId: routes.user_get_all_trails
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Trails successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTrail'
+  
+  /trails/signedout:
+    get:
+      tags:
+        - User Access
+      summary: Get all trails
+      description: Gets all existing trails without IDs and timestamps, no pathpoints and features
+      operationId: routes.signedout_get_all_trails
+      responses:
+        "200":
+          description: Trails successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTrail'
+
+
+
+  
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  
+      x-bearerInfoFunc: auth.decode_token
   schemas:
     Trail:
       type: object
@@ -148,3 +636,73 @@ components:
           type: string
           format: date-time
           description: "The timestamp when the trail was created or last updated"
+    CreateTrail:
+      type: object
+      properties:
+        TrailName:
+          type: string
+          description: "Name of the trail"
+        TrailLocation:
+          type: string
+          description: "Location of the trail"
+        TrailSummary:
+          type: string
+          description: "A short summary of the trail"
+        TrailDescription:
+          type: string
+          description: "A detailed description of the trail"
+        Difficulty:
+          type: string
+          description: "Difficulty level (e.g., Easy, Medium, Hard)"
+        RouteType:
+          type: string
+          description: "Type of route (e.g., loop, out-and-back)"
+        Distance_km:
+          type: number
+          format: float
+          description: "Total distance of the trail in kilometers"
+        ElevationGain_m:
+          type: integer
+          description: "Total elevation gain of the trail in meters"
+        TimeEstimate_min:
+          type: integer
+          description: "Estimated time to complete the trail in minutes"
+
+    PathPoint:
+      type: object
+      properties:
+        PathPointID:
+          type: integer
+          description: "The unique identifier of the path point"
+        Latitude:
+          type: number
+          format: float
+          description: "Latitude coordinate of the path point"
+        Longitude:
+          type: number
+          format: float
+          description: "Longitude coordinate of the path point"
+        Details:
+          type: string
+          description: "Description of the path point"
+        Timestamp:
+          type: string
+          format: date-time
+          description: "Timestamp of when the path point was created or last updated"
+  
+
+    Feature:
+      type: object
+      properties:
+        FeatureID:
+          type: integer
+          description: "Unique ID of the feature"
+        FeatureName:
+          type: string
+          description: "Name of the feature"
+        Timestamp:
+          type: string
+          format: date-time
+          description: "Timestamp of the feature's creation or last update"
+      required:
+        - FeatureName

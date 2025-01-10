@@ -1,11 +1,25 @@
-#models.py
-
 from datetime import datetime
 import pytz
 from config import db, ma
 from marshmallow_sqlalchemy import fields
 
-########## Trail Model ####################################################################
+########## TrailUser Model ####################################################################
+class TrailUser(db.Model):
+    __tablename__ = "TrailUser"
+    __table_args__ = {"schema": "CW2"}
+
+    UserID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    EmailAddress = db.Column(db.String(320), nullable=False)
+    RoleType = db.Column(db.String(5), nullable=False)
+
+    trails = db.relationship(
+        "Trail",
+        backref="Owner",
+        cascade="all, delete, delete-orphan"  
+    )
+
+
+########### Trail Model #######################################################################
 class Trail(db.Model):
     __tablename__ = "Trail"
     __table_args__ = {"schema": "CW2"}
@@ -20,56 +34,26 @@ class Trail(db.Model):
     Distance_km = db.Column(db.Numeric(5, 2), nullable=True)
     ElevationGain_m = db.Column(db.Integer, nullable=True)
     TimeEstimate_min = db.Column(db.Integer, nullable=True)
-    OwnerID = db.Column(db.Integer, db.ForeignKey("CW2.TrailUser.UserID"), nullable=False)
+    OwnerID = db.Column(db.Integer, db.ForeignKey("CW2.TrailUser.UserID"), nullable=False)  # foreign key linking trail to its owner
 
-    Timestamp = db.Column(
+    Timestamp = db.Column(  # timestamp to keep track of last created/modified
         db.DateTime,
         default=lambda: datetime.now(pytz.timezone('Europe/London')),
         onupdate=lambda: datetime.now(pytz.timezone('Europe/London'))
     )
 
-class TrailSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Trail
-        load_instance = True
-        sql_session = db.session
-        include_relationships = True
-    
-    OwnerID = ma.auto_field(required=True) 
-    owner = fields.Nested("TrailUserSchema")
-    
-trail_schema = TrailSchema()
-trail_schema_many = TrailSchema(many=True)
-
-
-
-########## TrailUser Model ###################################################################
-class TrailUser(db.Model):
-    __tablename__ = "TrailUser"
-    __table_args__ = {"schema": "CW2"}
-
-    UserID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    EmailAddress = db.Column(db.String(320), nullable=False)
-    RoleType = db.Column(db.String(5), nullable=False)
-
-    trails = db.relationship(
-        "Trail",
-        backref="Owner",
-        cascade="all, delete, delete-orphan"
+    PathPoints = db.relationship(
+        "PathPoint",
+        secondary="CW2.TrailPoint",  #(link table)
     )
 
-class TrailUserSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = TrailUser
-        load_instance = True
-        sql_session = db.session
-
-trail_user_schema = TrailUserSchema()
-trail_user_schema_many = TrailUserSchema(many=True)
+    Features = db.relationship(
+        "Feature",
+        secondary="CW2.TrailFeature",  #(link table)
+    )
 
 
-
-########## PathPoint Model ####################################################################
+################# PathPoint Model #############################################################
 class PathPoint(db.Model):
     __tablename__ = "PathPoint"
     __table_args__ = {"schema": "CW2"}
@@ -84,46 +68,32 @@ class PathPoint(db.Model):
         onupdate=lambda: datetime.now(pytz.timezone('Europe/London'))
     )
 
-class PathPointSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = PathPoint
-        load_instance = True
-        sql_session = db.session
 
-path_point_schema = PathPointSchema()
-path_point_schema_many = PathPointSchema(many=True)
-
-
-
-########## TrailPoint Model ####################################################################
+########## TrailPoint Model ###################################################################
 class TrailPoint(db.Model):
     __tablename__ = "TrailPoint"
     __table_args__ = {"schema": "CW2"}
 
-    TrailID = db.Column(db.Integer, db.ForeignKey("CW2.Trail.TrailID"), nullable=False, primary_key=True)
-    PathPointID = db.Column(db.Integer, db.ForeignKey("CW2.PathPoint.PathPointID"), nullable=False, primary_key=True)
+    TrailID = db.Column(
+        db.Integer,
+        db.ForeignKey("CW2.Trail.TrailID", ondelete="CASCADE"),  #delete when the trail is deleted
+        nullable=False,
+        primary_key=True
+    )
+    PathPointID = db.Column(
+        db.Integer,
+        db.ForeignKey("CW2.PathPoint.PathPointID", ondelete="CASCADE"),  #delete when the path point is deleted
+        nullable=False,
+        primary_key=True
+    )
     Timestamp = db.Column(
         db.DateTime,
         default=lambda: datetime.now(pytz.timezone('Europe/London')),
         onupdate=lambda: datetime.now(pytz.timezone('Europe/London'))
     )
 
-    trail = db.relationship("Trail", backref="trail_points")
-    path_point = db.relationship("PathPoint", backref="trail_points")
 
-class TrailPointSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = TrailPoint
-        load_instance = True
-        sql_session = db.session
-        include_fk = True
-
-trail_point_schema = TrailPointSchema()
-trail_point_schema_many = TrailPointSchema(many=True)
-
-
-
-########## Feature Model ########################################################################
+########## Feature Model ######################################################################
 class Feature(db.Model):
     __tablename__ = "Feature"
     __table_args__ = {"schema": "CW2"}
@@ -136,37 +106,27 @@ class Feature(db.Model):
         onupdate=lambda: datetime.now(pytz.timezone('Europe/London'))
     )
 
-class FeatureSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Feature
-        load_instance = True
-        sql_session = db.session
 
-feature_schema = FeatureSchema()
-feature_schema_many = FeatureSchema(many=True)
-
-
-
-########## TrailFeature Model ####################################################################
+########## TrailFeature Model #################################################################
 class TrailFeature(db.Model):
     __tablename__ = "TrailFeature"
     __table_args__ = {"schema": "CW2"}
 
-    TrailID = db.Column(db.Integer, db.ForeignKey("CW2.Trail.TrailID"), nullable=False, primary_key=True)
-    FeatureID = db.Column(db.Integer, db.ForeignKey("CW2.Feature.FeatureID"), nullable=False, primary_key=True)
+    TrailID = db.Column(
+        db.Integer,
+        db.ForeignKey("CW2.Trail.TrailID", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True
+    )
+    FeatureID = db.Column(
+        db.Integer,
+        db.ForeignKey("CW2.Feature.FeatureID", ondelete="CASCADE"),  
+        nullable=False,
+        primary_key=True
+    )
 
     Timestamp = db.Column(
         db.DateTime,
         default=lambda: datetime.now(pytz.timezone('Europe/London')),
         onupdate=lambda: datetime.now(pytz.timezone('Europe/London'))
     )
-
-class TrailFeatureSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = TrailFeature
-        load_instance = True
-        sql_session = db.session
-        include_fk = True
-
-trail_feature_schema = TrailFeatureSchema()
-trail_feature_schema_many = TrailFeatureSchema(many=True)
