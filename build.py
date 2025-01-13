@@ -5,7 +5,7 @@ from config import db, ma, conn, cursor
 ### TRAIL USER TABLE #################################################
 columns = [
     'UserID INT IDENTITY(1,1) PRIMARY KEY',
-    'EmailAddress VARCHAR(320) NOT NULL',
+    'EmailAddress VARCHAR(320) UNIQUE, NOT NULL',
     'RoleType VARCHAR(5) NOT NULL'
 ]
 create_table_cmd = f"CREATE TABLE CW2.TrailUser ({','.join(columns)})"

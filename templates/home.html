@@ -1,11 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>RP Flask REST API</title>
+    <meta charset="UTF-8">
+    <title>RP Flask REST API</title>
 </head>
 <body>
-<h1>
-Hello, World!
-</h1>
+    <h1>
+        Trail Service!
+    </h1>
+    {% for Trail in trails %}
+        <h2>{{ Trail.TrailName }} {{ Trail.TrailLocation }}</h2>
+        <ul>
+            {% for Feature in Trail.Features %}
+                <li>
+                    {{ Feature.FeatureName }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
 </body>
+</html>

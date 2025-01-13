@@ -3,7 +3,7 @@ from schemas import  Trail, trail_schema, admin_trail_schema_many, admin_trail_s
 from config import db
 from auth import is_admin, is_user
 
-
+@is_admin
 def admin_get_all_trails():
     trails = Trail.query.all()
     result = admin_trail_schema_many.dump(trails)
